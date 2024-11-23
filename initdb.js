@@ -178,22 +178,16 @@ db.prepare(`
 `).run();
 
 async function initData() {
-  const stmt = db.prepare(`
-      INSERT INTO meals VALUES (
-         null,
-         @slug,
-         @title,
-         @image,
-         @summary,
-         @instructions,
-         @creator,
-         @creator_email
-      )
-   `);
-
-  for (const meal of dummyMeals) {
-    stmt.run(meal);
-  }
+   const stmt = db.prepare('SELECT COUNT(*) as count FROM meals WHERE slug = ?');
+   for (const meal of dummyMeals) {
+       const { count } = stmt.get(meal.slug);
+       if (count === 0) {
+           db.prepare(`
+               INSERT INTO meals (slug, title, image, summary, instructions, creator, creator_email)
+               VALUES (@slug, @title, @image, @summary, @instructions, @creator, @creator_email)
+           `).run(meal);
+       }
+   }   
 }
 
 initData();
